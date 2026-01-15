@@ -10,80 +10,68 @@ export function parseProjectInput(input: string): ParsedProject[] {
     const trimmedLine = line.trim();
     if (!trimmedLine) continue;
 
-    // Match pattern: "Project Name" followed by numbers
-    // Handles formats like:
-    // "Eleceed 137, 138, 139"
-    // "IRL Quest 50"
-    // "Solo Leveling 100 101 102"
-    // "Tower of God Ep. 1, 2, 3"
-    
-    // Find where numbers start
-    const match = trimmedLine.match(/^(.+?)\s+([\d,\s\-]+)$/);
-    
-    if (match) {
-      const projectName = match[1].trim();
-      const numbersString = match[2];
-      
-      // Extract all numbers from the string
-      const numbers = numbersString
-        .split(/[,\s]+/)
-        .map(n => n.trim())
-        .filter(n => n)
-        .map(n => {
-          // Handle ranges like "1-5"
-          if (n.includes('-')) {
-            const [start, end] = n.split('-').map(Number);
-            if (!isNaN(start) && !isNaN(end) && start <= end) {
-              return Array.from({ length: end - start + 1 }, (_, i) => start + i);
-            }
-          }
-          return parseInt(n, 10);
-        })
-        .flat()
-        .filter(n => !isNaN(n));
+    // Skip "Total" summary lines
+    if (/^total\s*[-:]/i.test(trimmedLine)) continue;
 
-      if (projectName && numbers.length > 0) {
-        // Check if this project already exists
-        const existingIndex = projects.findIndex(
-          p => p.name.toLowerCase() === projectName.toLowerCase()
-        );
+    let projectName = '';
+    let numbersString = '';
 
-        if (existingIndex >= 0) {
-          // Merge chapters
-          const existing = projects[existingIndex];
-          const allChapters = [...new Set([...existing.chapters, ...numbers])].sort((a, b) => a - b);
-          projects[existingIndex] = {
-            ...existing,
-            chapters: allChapters,
-            count: allChapters.length,
-          };
-        } else {
-          projects.push({
-            name: projectName,
-            chapters: [...new Set(numbers)].sort((a, b) => a - b),
-            count: numbers.length,
-          });
-        }
-      }
+    // Format 1: "Project Name - 1 / 2 / 3 /" (dash separator with slashes)
+    const dashMatch = trimmedLine.match(/^(.+?)\s*[-–—]\s*(.*)$/);
+    
+    if (dashMatch) {
+      projectName = dashMatch[1].trim();
+      numbersString = dashMatch[2];
     } else {
-      // If no numbers found, treat the whole line as a project with count 1
-      // This handles single entries like just "Eleceed"
-      const projectName = trimmedLine;
-      if (projectName) {
-        const existingIndex = projects.findIndex(
-          p => p.name.toLowerCase() === projectName.toLowerCase()
-        );
-
-        if (existingIndex >= 0) {
-          projects[existingIndex].count += 1;
-        } else {
-          projects.push({
-            name: projectName,
-            chapters: [],
-            count: 1,
-          });
-        }
+      // Format 2: "Project Name 1, 2, 3" or "Project Name 1 2 3" (no dash)
+      const spaceMatch = trimmedLine.match(/^(.+?)\s+([\d,\s\/\-]+)$/);
+      if (spaceMatch) {
+        projectName = spaceMatch[1].trim();
+        numbersString = spaceMatch[2];
+      } else {
+        // No numbers found, treat whole line as project with count 1
+        projectName = trimmedLine;
       }
+    }
+
+    if (!projectName) continue;
+
+    // Extract all numbers - handle slashes, commas, spaces as separators
+    const numbers = numbersString
+      .split(/[,\/\s]+/)
+      .map(n => n.trim())
+      .filter(n => n && /^\d+$/.test(n))
+      .map(n => parseInt(n, 10))
+      .filter(n => !isNaN(n));
+
+    // Check if this project already exists (case-insensitive)
+    const existingIndex = projects.findIndex(
+      p => p.name.toLowerCase() === projectName.toLowerCase()
+    );
+
+    if (numbers.length > 0) {
+      if (existingIndex >= 0) {
+        const existing = projects[existingIndex];
+        const allChapters = [...new Set([...existing.chapters, ...numbers])].sort((a, b) => a - b);
+        projects[existingIndex] = {
+          ...existing,
+          chapters: allChapters,
+          count: allChapters.length,
+        };
+      } else {
+        projects.push({
+          name: projectName,
+          chapters: [...new Set(numbers)].sort((a, b) => a - b),
+          count: numbers.length,
+        });
+      }
+    } else if (existingIndex < 0 && projectName) {
+      // Project name only, no numbers
+      projects.push({
+        name: projectName,
+        chapters: [],
+        count: 1,
+      });
     }
   }
 
