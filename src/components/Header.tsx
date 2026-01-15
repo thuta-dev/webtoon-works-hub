@@ -1,4 +1,5 @@
-import { Palette } from 'lucide-react';
+import { Palette, LayoutDashboard, Puzzle, Scissors } from 'lucide-react';
+import { AppNavLink } from './AppNavLink';
 
 export function Header() {
   return (
@@ -12,14 +13,15 @@ export function Header() {
             <h1 className="text-xl font-bold text-foreground">
               Webtoon Admin Dashboard
             </h1>
-            <p className="text-xs text-muted-foreground">Typesetting Team Work Tracker</p>
+            <p className="text-xs text-muted-foreground hidden sm:block">Typesetting Team Super App</p>
           </div>
         </div>
         
-        <div className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground border-2 border-foreground px-3 py-1.5 bg-background" style={{ boxShadow: 'var(--shadow-hard-sm)' }}>
-          <span className="w-2 h-2 bg-foreground" />
-          Live Tracking
-        </div>
+        <nav className="flex items-center gap-2">
+          <AppNavLink to="/" icon={LayoutDashboard} label="Tracker" />
+          <AppNavLink to="/combiner" icon={Puzzle} label="Combiner" />
+          <AppNavLink to="/cropper" icon={Scissors} label="Cropper" />
+        </nav>
       </div>
     </header>
   );
