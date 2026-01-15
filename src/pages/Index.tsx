@@ -39,17 +39,17 @@ const Index = () => {
         {/* Add Member Section */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
-            <Users className="w-6 h-6 text-primary" />
+            <Users className="w-6 h-6 text-foreground" />
             <h2 className="text-2xl font-bold text-foreground">Team Members</h2>
             {members.length > 0 && (
-              <span className="px-2.5 py-0.5 bg-primary/20 text-primary text-sm font-medium rounded-full">
+              <span className="px-2.5 py-0.5 border-2 border-foreground text-foreground text-sm font-bold">
                 {members.length}
               </span>
             )}
           </div>
           <button
             onClick={addMember}
-            className="flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground font-semibold rounded-lg hover:bg-primary/90 transition-all duration-200 shadow-lg hover:shadow-primary/25 hover:scale-105 active:scale-95"
+            className="btn-notion flex items-center gap-2 px-5 py-2.5 bg-foreground text-background font-bold"
           >
             <Plus className="w-5 h-5" />
             Add New Member
@@ -69,17 +69,17 @@ const Index = () => {
             ))}
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center py-24 mb-12">
-            <div className="w-20 h-20 rounded-2xl bg-secondary/50 flex items-center justify-center mb-6">
-              <Users className="w-10 h-10 text-muted-foreground/50" />
+          <div className="flex flex-col items-center justify-center py-24 mb-12 border-2 border-dashed border-border">
+            <div className="w-20 h-20 border-2 border-foreground bg-secondary flex items-center justify-center mb-6">
+              <Users className="w-10 h-10 text-muted-foreground" />
             </div>
-            <h3 className="text-xl font-semibold text-foreground mb-2">No team members yet</h3>
+            <h3 className="text-xl font-bold text-foreground mb-2">No team members yet</h3>
             <p className="text-muted-foreground mb-6 text-center max-w-md">
               Click the "Add New Member" button above to start tracking your team's work.
             </p>
             <button
               onClick={addMember}
-              className="flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground font-semibold rounded-lg hover:bg-primary/90 transition-all duration-200 shadow-lg hover:shadow-primary/25"
+              className="btn-notion flex items-center gap-2 px-6 py-3 bg-foreground text-background font-bold"
             >
               <Plus className="w-5 h-5" />
               Add Your First Member
@@ -90,8 +90,8 @@ const Index = () => {
         {/* Global Summary */}
         <section>
           <h2 className="text-2xl font-bold text-foreground mb-6 flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center">
-              <span className="text-primary text-lg">Σ</span>
+            <div className="w-8 h-8 border-2 border-foreground bg-secondary flex items-center justify-center">
+              <span className="text-foreground text-lg font-bold">Σ</span>
             </div>
             Global Summary
           </h2>
@@ -100,8 +100,8 @@ const Index = () => {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-border bg-card/30 py-4">
-        <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
+      <footer className="border-t-2 border-foreground bg-background py-4">
+        <div className="container mx-auto px-4 text-center text-sm text-muted-foreground font-medium">
           Webtoon Typesetting Team Dashboard • Real-time work tracking
         </div>
       </footer>

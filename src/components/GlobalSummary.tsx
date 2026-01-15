@@ -43,44 +43,44 @@ export function GlobalSummary({ members }: GlobalSummaryProps) {
   }, [members]);
 
   return (
-    <div className="card-glow rounded-xl border border-border p-6">
+    <div className="card-notion p-6 bg-card">
       {/* Stats Row */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-        <div className="flex items-center gap-4 bg-secondary/30 rounded-lg p-4">
-          <div className="w-12 h-12 rounded-lg bg-primary/20 flex items-center justify-center">
-            <TrendingUp className="w-6 h-6 text-primary" />
+        <div className="flex items-center gap-4 bg-secondary border-2 border-foreground p-4" style={{ boxShadow: 'var(--shadow-hard-sm)' }}>
+          <div className="w-12 h-12 border-2 border-foreground bg-background flex items-center justify-center">
+            <TrendingUp className="w-6 h-6 text-foreground" />
           </div>
           <div>
-            <p className="text-sm text-muted-foreground">Total Chapters</p>
-            <p className="text-2xl font-bold text-primary font-mono">{totalChapters}</p>
+            <p className="text-sm text-muted-foreground font-medium">Total Chapters</p>
+            <p className="text-2xl font-bold text-foreground font-mono">{totalChapters}</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-4 bg-secondary/30 rounded-lg p-4">
-          <div className="w-12 h-12 rounded-lg bg-success/20 flex items-center justify-center">
-            <Users className="w-6 h-6 text-success" />
+        <div className="flex items-center gap-4 bg-secondary border-2 border-foreground p-4" style={{ boxShadow: 'var(--shadow-hard-sm)' }}>
+          <div className="w-12 h-12 border-2 border-foreground bg-background flex items-center justify-center">
+            <Users className="w-6 h-6 text-foreground" />
           </div>
           <div>
-            <p className="text-sm text-muted-foreground">Active Members</p>
-            <p className="text-2xl font-bold text-success font-mono">{totalMembers}</p>
+            <p className="text-sm text-muted-foreground font-medium">Active Members</p>
+            <p className="text-2xl font-bold text-foreground font-mono">{totalMembers}</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-4 bg-secondary/30 rounded-lg p-4">
-          <div className="w-12 h-12 rounded-lg bg-warning/20 flex items-center justify-center">
-            <BookOpen className="w-6 h-6 text-warning" />
+        <div className="flex items-center gap-4 bg-secondary border-2 border-foreground p-4" style={{ boxShadow: 'var(--shadow-hard-sm)' }}>
+          <div className="w-12 h-12 border-2 border-foreground bg-background flex items-center justify-center">
+            <BookOpen className="w-6 h-6 text-foreground" />
           </div>
           <div>
-            <p className="text-sm text-muted-foreground">Total Projects</p>
-            <p className="text-2xl font-bold text-warning font-mono">{totalProjects}</p>
+            <p className="text-sm text-muted-foreground font-medium">Total Projects</p>
+            <p className="text-2xl font-bold text-foreground font-mono">{totalProjects}</p>
           </div>
         </div>
       </div>
 
       {/* Projects Breakdown */}
-      <div className="flex items-center gap-2 mb-4">
-        <BarChart3 className="w-5 h-5 text-primary" />
-        <h3 className="text-lg font-semibold text-foreground">Project Breakdown</h3>
+      <div className="flex items-center gap-2 mb-4 border-b-2 border-foreground pb-3">
+        <BarChart3 className="w-5 h-5 text-foreground" />
+        <h3 className="text-lg font-bold text-foreground">Project Breakdown</h3>
       </div>
 
       {globalProjects.length > 0 ? (
@@ -92,21 +92,21 @@ export function GlobalSummary({ members }: GlobalSummaryProps) {
             return (
               <div
                 key={index}
-                className="relative bg-secondary/30 rounded-lg p-3 overflow-hidden animate-slide-up"
+                className="relative bg-background border-2 border-foreground p-3 overflow-hidden animate-slide-up"
                 style={{ animationDelay: `${index * 30}ms` }}
               >
                 {/* Progress bar background */}
                 <div
-                  className="absolute inset-0 bg-primary/10 transition-all duration-500"
+                  className="absolute inset-0 bg-secondary transition-all duration-500"
                   style={{ width: `${percentage}%` }}
                 />
                 
                 <div className="relative">
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm font-medium text-foreground truncate flex-1 mr-2">
+                    <span className="text-sm font-bold text-foreground truncate flex-1 mr-2">
                       {project.name}
                     </span>
-                    <span className="text-lg font-bold text-primary font-mono">
+                    <span className="text-lg font-bold text-foreground font-mono">
                       {project.totalCount}
                     </span>
                   </div>
@@ -119,7 +119,7 @@ export function GlobalSummary({ members }: GlobalSummaryProps) {
           })}
         </div>
       ) : (
-        <div className="flex items-center justify-center h-24 text-muted-foreground/50 text-sm">
+        <div className="flex items-center justify-center h-24 text-muted-foreground text-sm border-2 border-dashed border-border">
           No work entries yet. Add members and paste their work to see the summary.
         </div>
       )}
