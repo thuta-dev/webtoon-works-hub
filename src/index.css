@@ -6,57 +6,89 @@
 
 @layer base {
   :root {
-    --background: 222 47% 6%;
-    --foreground: 210 40% 98%;
+    --background: 0 0% 100%;
+    --foreground: 0 0% 9%;
 
-    --card: 222 47% 8%;
-    --card-foreground: 210 40% 98%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 9%;
 
-    --popover: 222 47% 8%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 9%;
 
-    --primary: 185 70% 50%;
-    --primary-foreground: 222 47% 6%;
+    --primary: 0 0% 9%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 217 33% 17%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 9%;
 
-    --muted: 217 33% 17%;
-    --muted-foreground: 215 20% 55%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 45%;
 
-    --accent: 185 70% 50%;
-    --accent-foreground: 222 47% 6%;
+    --accent: 0 0% 96%;
+    --accent-foreground: 0 0% 9%;
 
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 217 33% 20%;
-    --input: 217 33% 17%;
-    --ring: 185 70% 50%;
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 0 0% 9%;
 
-    --radius: 0.75rem;
+    --radius: 0.375rem;
 
-    --sidebar-background: 222 47% 8%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 185 70% 50%;
-    --sidebar-primary-foreground: 222 47% 6%;
-    --sidebar-accent: 217 33% 17%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 217 33% 20%;
-    --sidebar-ring: 185 70% 50%;
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 0 0% 9%;
+    --sidebar-primary: 0 0% 9%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 0 0% 96%;
+    --sidebar-accent-foreground: 0 0% 9%;
+    --sidebar-border: 0 0% 90%;
+    --sidebar-ring: 0 0% 9%;
 
-    /* Custom tokens for this app */
+    /* Custom tokens */
     --success: 142 71% 45%;
-    --success-foreground: 210 40% 98%;
+    --success-foreground: 0 0% 100%;
     --warning: 38 92% 50%;
-    --warning-foreground: 222 47% 6%;
-    --gradient-glow: linear-gradient(135deg, hsl(185 70% 50% / 0.15), hsl(265 70% 50% / 0.1));
-    --shadow-glow: 0 0 40px hsl(185 70% 50% / 0.15);
+    --warning-foreground: 0 0% 9%;
+    
+    /* Hard shadow - Notion style */
+    --shadow-hard: 3px 3px 0px 0px hsl(0 0% 0%);
+    --shadow-hard-sm: 2px 2px 0px 0px hsl(0 0% 0%);
   }
 
   .dark {
-    --background: 222 47% 6%;
-    --foreground: 210 40% 98%;
+    --background: 0 0% 9%;
+    --foreground: 0 0% 98%;
+
+    --card: 0 0% 12%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 0 0% 12%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 0 0% 98%;
+    --primary-foreground: 0 0% 9%;
+
+    --secondary: 0 0% 18%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 0 0% 18%;
+    --muted-foreground: 0 0% 55%;
+
+    --accent: 0 0% 18%;
+    --accent-foreground: 0 0% 98%;
+
+    --border: 0 0% 25%;
+    --input: 0 0% 18%;
+
+    --sidebar-background: 0 0% 9%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-accent: 0 0% 18%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 0 0% 25%;
+
+    --shadow-hard: 3px 3px 0px 0px hsl(0 0% 100% / 0.2);
+    --shadow-hard-sm: 2px 2px 0px 0px hsl(0 0% 100% / 0.2);
   }
 }
 
@@ -67,40 +99,54 @@
 
   body {
     @apply bg-background text-foreground font-sans antialiased;
-    font-family: 'Inter', sans-serif;
-  }
-
-  .font-mono {
-    font-family: 'JetBrains Mono', monospace;
   }
 }
 
 @layer components {
-  .card-glow {
-    @apply relative overflow-hidden;
-    background: linear-gradient(135deg, hsl(var(--card)) 0%, hsl(217 33% 10%) 100%);
+  .card-notion {
+    @apply bg-card border-2 border-foreground;
+    box-shadow: var(--shadow-hard);
   }
 
-  .card-glow::before {
-    content: '';
-    @apply absolute inset-0 opacity-50 pointer-events-none;
-    background: var(--gradient-glow);
+  .card-notion-sm {
+    @apply bg-card border-2 border-foreground;
+    box-shadow: var(--shadow-hard-sm);
   }
 
-  .input-dark {
-    @apply bg-secondary/50 border-border focus:border-primary focus:ring-1 focus:ring-primary/50 transition-all duration-200;
+  .input-notion {
+    @apply bg-background border-2 border-foreground focus:ring-0 focus:ring-offset-0 transition-all duration-100;
   }
 
-  .scrollbar-dark::-webkit-scrollbar {
+  .input-notion:focus {
+    box-shadow: var(--shadow-hard-sm);
+    transform: translate(-1px, -1px);
+  }
+
+  .btn-notion {
+    @apply border-2 border-foreground font-medium transition-all duration-100;
+    box-shadow: var(--shadow-hard-sm);
+  }
+
+  .btn-notion:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 4px 4px 0px 0px hsl(var(--foreground));
+  }
+
+  .btn-notion:active {
+    transform: translate(1px, 1px);
+    box-shadow: 1px 1px 0px 0px hsl(var(--foreground));
+  }
+
+  .scrollbar-notion::-webkit-scrollbar {
     @apply w-2;
   }
 
-  .scrollbar-dark::-webkit-scrollbar-track {
-    @apply bg-secondary/30 rounded-full;
+  .scrollbar-notion::-webkit-scrollbar-track {
+    @apply bg-muted;
   }
 
-  .scrollbar-dark::-webkit-scrollbar-thumb {
-    @apply bg-muted-foreground/30 rounded-full hover:bg-muted-foreground/50;
+  .scrollbar-notion::-webkit-scrollbar-thumb {
+    @apply bg-muted-foreground/40 hover:bg-muted-foreground/60;
   }
 }
 
