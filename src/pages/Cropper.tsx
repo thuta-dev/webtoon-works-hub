@@ -1,12 +1,15 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { Header } from '@/components/Header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Upload, Download, Trash2, Scissors, Image as ImageIcon, Package } from 'lucide-react';
+import { Upload, Scissors, CloudOff, Cloud } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
 import JSZip from 'jszip';
+import { CropperSettings } from '@/components/cropper/CropperSettings';
+import { ImageUploadZone } from '@/components/cropper/ImageUploadZone';
+import { SlicedResults } from '@/components/cropper/SlicedResults';
+import { useGoogleDrive } from '@/hooks/useGoogleDrive';
+import { toast } from '@/hooks/use-toast';
 
 interface UploadedImage {
   file: File;
@@ -22,17 +25,33 @@ interface SlicedResult {
 type AspectRatio = '4:5' | '6:9';
 
 const ASPECT_RATIOS: Record<AspectRatio, number> = {
-  '4:5': 5 / 4,  // height = width * 1.25
-  '6:9': 9 / 6,  // height = width * 1.5
+  '4:5': 5 / 4,
+  '6:9': 9 / 6,
 };
+
+// Predefined story names - can be extended
+const STORY_OPTIONS = [
+  'Story A',
+  'Story B',
+  'Story C',
+  'My Webtoon Series',
+  'The Adventures',
+  'Romance Chronicles',
+];
 
 export default function Cropper() {
   const [images, setImages] = useState<UploadedImage[]>([]);
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>('4:5');
   const [zipFilename, setZipFilename] = useState('sliced_images');
+  const [chapterNumber, setChapterNumber] = useState('');
+  const [storyName, setStoryName] = useState('');
+  const [tiktokMode, setTiktokMode] = useState(false);
   const [results, setResults] = useState<SlicedResult[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isExporting, setIsExporting] = useState(false);
+  const [exportProgress, setExportProgress] = useState(0);
+  
+  const { isConnected, isLoading: isDriveLoading, connect, disconnect, uploadFiles } = useGoogleDrive();
 
   const handleFileUpload = useCallback((files: FileList | null) => {
     if (!files) return;
@@ -52,15 +71,6 @@ export default function Cropper() {
       a.name.localeCompare(b.name, undefined, { numeric: true })
     ));
     setResults([]);
-  }, []);
-
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    handleFileUpload(e.dataTransfer.files);
-  }, [handleFileUpload]);
-
-  const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
   }, []);
 
   const removeImage = (index: number) => {
@@ -92,7 +102,6 @@ export default function Cropper() {
       for (let imgIndex = 0; imgIndex < images.length; imgIndex++) {
         const img = images[imgIndex];
         
-        // Load the image
         const imgEl = await new Promise<HTMLImageElement>((resolve, reject) => {
           const el = new window.Image();
           el.onload = () => resolve(el);
@@ -105,7 +114,6 @@ export default function Cropper() {
         const totalHeight = imgEl.height;
         const sliceCount = Math.ceil(totalHeight / sliceHeight);
 
-        // Get base name without extension
         const baseName = img.name.replace(/\.[^/.]+$/, '');
 
         for (let i = 0; i < sliceCount; i++) {
@@ -139,6 +147,11 @@ export default function Cropper() {
       setResults(newResults);
     } catch (error) {
       console.error('Error slicing images:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to slice images.',
+        variant: 'destructive',
+      });
     } finally {
       setIsProcessing(false);
     }
@@ -169,6 +182,33 @@ export default function Cropper() {
     URL.revokeObjectURL(link.href);
   };
 
+  const handleExportToDrive = async () => {
+    if (!storyName || !chapterNumber) {
+      toast({
+        title: 'Missing Information',
+        description: 'Please select a story and enter a chapter number.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsExporting(true);
+    setExportProgress(0);
+
+    try {
+      await uploadFiles(
+        results.map((r) => ({ name: r.name, dataUrl: r.dataUrl })),
+        storyName,
+        chapterNumber,
+        tiktokMode,
+        (progress) => setExportProgress(progress)
+      );
+    } finally {
+      setIsExporting(false);
+      setExportProgress(0);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -178,94 +218,53 @@ export default function Cropper() {
           {/* Upload Section */}
           <Card className="border-2 border-foreground bg-background" style={{ boxShadow: 'var(--shadow-hard)' }}>
             <CardHeader className="border-b-2 border-foreground">
-              <CardTitle className="flex items-center gap-2 text-foreground">
-                <Upload className="w-5 h-5" />
-                Upload Long Images
+              <CardTitle className="flex items-center justify-between text-foreground">
+                <span className="flex items-center gap-2">
+                  <Upload className="w-5 h-5" />
+                  Upload Long Images
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={isConnected ? disconnect : connect}
+                  disabled={isDriveLoading}
+                  className="border-2 border-foreground text-foreground hover:bg-muted"
+                >
+                  {isConnected ? (
+                    <>
+                      <Cloud className="w-4 h-4 mr-1 text-green-600" />
+                      Connected
+                    </>
+                  ) : (
+                    <>
+                      <CloudOff className="w-4 h-4 mr-1" />
+                      Connect Drive
+                    </>
+                  )}
+                </Button>
               </CardTitle>
             </CardHeader>
             <CardContent className="p-4 space-y-4">
-              {/* Drop Zone */}
-              <div
-                className="border-2 border-dashed border-foreground p-8 text-center cursor-pointer hover:bg-muted transition-colors"
-                onDrop={handleDrop}
-                onDragOver={handleDragOver}
-                onClick={() => fileInputRef.current?.click()}
-              >
-                <Scissors className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-                <p className="text-foreground font-medium">Drop long images here or click to upload</p>
-                <p className="text-sm text-muted-foreground mt-1">Images will be sliced based on aspect ratio</p>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  multiple
-                  accept="image/*"
-                  className="hidden"
-                  onChange={(e) => handleFileUpload(e.target.files)}
-                />
-              </div>
+              <ImageUploadZone
+                images={images}
+                onUpload={handleFileUpload}
+                onRemove={removeImage}
+                onClearAll={clearAll}
+              />
 
-              {/* Settings */}
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="aspectRatio" className="text-foreground font-medium">Aspect Ratio</Label>
-                  <Select value={aspectRatio} onValueChange={(v) => setAspectRatio(v as AspectRatio)}>
-                    <SelectTrigger 
-                      className="border-2 border-foreground bg-background text-foreground"
-                      style={{ boxShadow: 'var(--shadow-hard-sm)' }}
-                    >
-                      <SelectValue placeholder="Select ratio" />
-                    </SelectTrigger>
-                    <SelectContent className="border-2 border-foreground bg-background">
-                      <SelectItem value="4:5">4:5 (Instagram Portrait)</SelectItem>
-                      <SelectItem value="6:9">6:9 (Taller)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="zipFilename" className="text-foreground font-medium">Zip Filename</Label>
-                  <Input
-                    id="zipFilename"
-                    value={zipFilename}
-                    onChange={(e) => setZipFilename(e.target.value)}
-                    placeholder="sliced_images"
-                    className="border-2 border-foreground bg-background text-foreground"
-                    style={{ boxShadow: 'var(--shadow-hard-sm)' }}
-                  />
-                </div>
-              </div>
-
-              {/* Image List */}
-              {images.length > 0 && (
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-foreground">{images.length} images uploaded</span>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={clearAll}
-                      className="border-2 border-foreground text-foreground hover:bg-muted"
-                    >
-                      <Trash2 className="w-4 h-4 mr-1" />
-                      Clear All
-                    </Button>
-                  </div>
-                  <div className="max-h-48 overflow-y-auto border-2 border-foreground p-2 space-y-1">
-                    {images.map((img, index) => (
-                      <div key={index} className="flex items-center justify-between py-1 px-2 hover:bg-muted">
-                        <span className="text-sm text-foreground truncate flex-1">{img.name}</span>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => removeImage(index)}
-                          className="text-foreground hover:bg-destructive hover:text-destructive-foreground"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
+              <CropperSettings
+                aspectRatio={aspectRatio}
+                setAspectRatio={setAspectRatio}
+                zipFilename={zipFilename}
+                setZipFilename={setZipFilename}
+                chapterNumber={chapterNumber}
+                setChapterNumber={setChapterNumber}
+                storyName={storyName}
+                setStoryName={setStoryName}
+                tiktokMode={tiktokMode}
+                setTiktokMode={setTiktokMode}
+                storyOptions={STORY_OPTIONS}
+              />
 
               {/* Slice Button */}
               <Button
@@ -274,70 +273,55 @@ export default function Cropper() {
                 className="w-full border-2 border-foreground bg-foreground text-background hover:bg-foreground/90"
                 style={{ boxShadow: 'var(--shadow-hard-sm)' }}
               >
+                <Scissors className="w-4 h-4 mr-2" />
                 {isProcessing ? 'Processing...' : 'Slice Images'}
               </Button>
+
+              {/* Export Progress */}
+              {isExporting && (
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground">Exporting to Google Drive...</p>
+                  <Progress value={exportProgress} className="h-2" />
+                </div>
+              )}
             </CardContent>
           </Card>
 
           {/* Results Section */}
-          <Card className="border-2 border-foreground bg-background" style={{ boxShadow: 'var(--shadow-hard)' }}>
+          <SlicedResults
+            results={results}
+            onDownloadSingle={downloadSingle}
+            onDownloadAllZip={downloadAllAsZip}
+            onExportToDrive={handleExportToDrive}
+            isExporting={isExporting}
+            isDriveConnected={isConnected}
+          />
+        </div>
+
+        {/* Google Drive Setup Instructions */}
+        {!isConnected && (
+          <Card className="mt-6 border-2 border-foreground bg-muted/30" style={{ boxShadow: 'var(--shadow-hard)' }}>
             <CardHeader className="border-b-2 border-foreground">
-              <CardTitle className="flex items-center gap-2 text-foreground">
-                <Package className="w-5 h-5" />
-                Sliced Results
-              </CardTitle>
+              <CardTitle className="text-foreground">📋 Google Drive Setup Instructions</CardTitle>
             </CardHeader>
-            <CardContent className="p-4 space-y-4">
-              {results.length === 0 ? (
-                <div className="text-center py-12 text-muted-foreground">
-                  <Scissors className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                  <p>Sliced images will appear here</p>
-                </div>
-              ) : (
-                <>
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="text-sm font-medium text-foreground">{results.length} slices created</span>
-                    <Button
-                      onClick={downloadAllAsZip}
-                      className="border-2 border-foreground bg-foreground text-background hover:bg-foreground/90"
-                      style={{ boxShadow: 'var(--shadow-hard-sm)' }}
-                    >
-                      <Package className="w-4 h-4 mr-2" />
-                      Download All as ZIP
-                    </Button>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-96 overflow-y-auto p-1">
-                    {results.map((result, index) => (
-                      <div 
-                        key={index} 
-                        className="border-2 border-foreground p-2 group relative" 
-                        style={{ boxShadow: 'var(--shadow-hard-sm)' }}
-                      >
-                        <img
-                          src={result.dataUrl}
-                          alt={result.name}
-                          className="w-full h-auto"
-                        />
-                        <div className="absolute inset-0 bg-foreground/80 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => downloadSingle(result)}
-                            className="border-2 border-background bg-background text-foreground hover:bg-muted"
-                          >
-                            <Download className="w-4 h-4" />
-                          </Button>
-                        </div>
-                        <p className="text-xs text-muted-foreground mt-1 truncate">{result.name}</p>
-                      </div>
-                    ))}
-                  </div>
-                </>
-              )}
+            <CardContent className="p-4 space-y-3 text-sm">
+              <p className="font-medium">To enable Google Drive export, follow these steps:</p>
+              <ol className="list-decimal list-inside space-y-2 text-muted-foreground">
+                <li>Go to <a href="https://console.cloud.google.com/" target="_blank" rel="noopener noreferrer" className="text-primary underline">Google Cloud Console</a></li>
+                <li>Create a new project or select an existing one</li>
+                <li>Enable the <strong>Google Drive API</strong> in APIs & Services → Library</li>
+                <li>Go to APIs & Services → Credentials → Create Credentials → OAuth Client ID</li>
+                <li>Choose "Web application" as the application type</li>
+                <li>Add your site URL to "Authorized JavaScript origins" (e.g., <code className="bg-muted px-1 rounded">https://your-app.lovable.app</code>)</li>
+                <li>Create an API Key in Credentials → Create Credentials → API Key</li>
+                <li>Provide the Client ID and API Key to the developer to integrate</li>
+              </ol>
+              <p className="text-xs text-muted-foreground mt-4">
+                Note: The CLIENT_ID and API_KEY need to be configured in the application code.
+              </p>
             </CardContent>
           </Card>
-        </div>
+        )}
       </main>
     </div>
   );
