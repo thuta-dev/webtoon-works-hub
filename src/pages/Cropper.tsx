@@ -137,9 +137,11 @@ export default function Cropper() {
           );
 
           const dataUrl = canvas.toDataURL('image/png');
+          // Sequential naming: web-01, web-02, etc. across all images
+          const sequentialNumber = newResults.length + 1;
           newResults.push({
             dataUrl,
-            name: `${baseName}_slice_${String(i + 1).padStart(3, '0')}.png`,
+            name: `web-${String(sequentialNumber).padStart(2, '0')}.png`,
           });
         }
       }
