@@ -124,9 +124,10 @@ export default function Combiner() {
         }
 
         const dataUrl = canvas.toDataURL('image/png');
+        // Sequential naming: web-01, web-02, etc.
         newResults.push({
           dataUrl,
-          name: splitCount > 1 ? `combined_part_${chunkIndex + 1}.png` : 'combined.png',
+          name: `web-${String(chunkIndex + 1).padStart(2, '0')}.png`,
         });
       }
 
